@@ -1,8 +1,33 @@
 {
   "name": "houdini",
-  "private": true,
   "version": "1.0.0",
+  "description": "AI-readable wallet profiles stored on 0G - bringing the llms.txt standard on-chain",
+  "author": "Houdini Team",
+  "license": "MIT",
+  "private": true,
   "type": "module",
+  "keywords": [
+    "web3",
+    "ai",
+    "llms.txt",
+    "0g-storage",
+    "wallet-identity",
+    "nft",
+    "ethereum",
+    "octav",
+    "erc7730",
+    "ledger",
+    "blockchain",
+    "decentralized-storage"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/houdini.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/houdini/issues"
+  },
+  "homepage": "https://github.com/yourusername/houdini#readme",
   "scripts": {
     "dev": "vite",
     "dev:backend": "cd backend && npm run dev",
