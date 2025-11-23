@@ -9,7 +9,10 @@ import {
   createIdentityNFT,
   getIdentityNFTsByWallet,
   getIdentityNFTByTokenId,
+  getIdentityNFTByTxHash,
   updateIdentityNFT,
+  confirmIdentityNFTTransaction,
+  failIdentityNFTTransaction,
   getIdentityNFTsCount,
   getIdentityNFTsCountByWallet,
   IdentityNFT
@@ -19,11 +22,13 @@ import {
  * Request body for registering a new NFT
  */
 interface RegisterNFTBody {
-  tokenId: number;
+  tokenId?: number | null;
+  transactionHash: string;
   walletAddress: string;
   profileType: number;
   og0RootHash: string;
   storageRecordId?: number;
+  status?: 'pending' | 'confirmed' | 'failed';
   createdAt: string;
 }
 
@@ -33,6 +38,22 @@ interface RegisterNFTBody {
 interface UpdateNFTBody {
   og0RootHash: string;
   lastUpdatedAt: string;
+}
+
+/**
+ * Request body for confirming a transaction
+ */
+interface ConfirmTransactionBody {
+  transactionHash: string;
+  tokenId: number;
+  confirmedAt: string;
+}
+
+/**
+ * Request body for failing a transaction
+ */
+interface FailTransactionBody {
+  transactionHash: string;
 }
 
 /**
@@ -61,33 +82,37 @@ export default async function nftRoutes(fastify: FastifyInstance) {
     '/api/nft/register',
     async (request: FastifyRequest<{ Body: RegisterNFTBody }>, reply: FastifyReply) => {
       try {
-        const { tokenId, walletAddress, profileType, og0RootHash, storageRecordId, createdAt } = request.body;
+        const { tokenId, transactionHash, walletAddress, profileType, og0RootHash, storageRecordId, status, createdAt } = request.body;
 
         // Validate required fields
-        if (tokenId === undefined || !walletAddress || profileType === undefined || !og0RootHash || !createdAt) {
+        if (!transactionHash || !walletAddress || profileType === undefined || !og0RootHash || !createdAt) {
           return reply.code(400).send({
             error: 'Missing required fields',
-            required: ['tokenId', 'walletAddress', 'profileType', 'og0RootHash', 'createdAt']
+            required: ['transactionHash', 'walletAddress', 'profileType', 'og0RootHash', 'createdAt']
           });
         }
 
         console.log('[NFT API] Registering new identity NFT:', {
-          tokenId,
+          tokenId: tokenId || 'pending',
+          transactionHash,
           walletAddress,
           profileType,
-          og0RootHash
+          og0RootHash,
+          status: status || 'pending'
         });
 
         const nft = createIdentityNFT({
-          token_id: tokenId,
+          token_id: tokenId ?? null,
+          transaction_hash: transactionHash,
           wallet_address: walletAddress,
           profile_type: profileType,
           og0_root_hash: og0RootHash,
           storage_record_id: storageRecordId || null,
+          status: status || 'pending',
           created_at: createdAt
         });
 
-        console.log('[NFT API] ✅ NFT registered with ID:', nft.id);
+        console.log('[NFT API] ✅ NFT registered with ID:', nft.id, 'Status:', nft.status);
 
         return reply.code(201).send({
           success: true,
@@ -100,7 +125,7 @@ export default async function nftRoutes(fastify: FastifyInstance) {
         if (error instanceof Error && error.message.includes('UNIQUE constraint')) {
           return reply.code(409).send({
             error: 'NFT already exists',
-            message: 'An NFT with this token ID already exists'
+            message: 'An NFT with this transaction hash or token ID already exists'
           });
         }
 
@@ -236,6 +261,98 @@ export default async function nftRoutes(fastify: FastifyInstance) {
         console.error('[NFT API] Error updating NFT:', error);
         return reply.code(500).send({
           error: 'Failed to update identity NFT',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  );
+
+  /**
+   * PATCH /api/nft/confirm-transaction
+   * Confirm a pending transaction and update token ID
+   */
+  fastify.patch<{ Body: ConfirmTransactionBody }>(
+    '/api/nft/confirm-transaction',
+    async (request: FastifyRequest<{ Body: ConfirmTransactionBody }>, reply: FastifyReply) => {
+      try {
+        const { transactionHash, tokenId, confirmedAt } = request.body;
+
+        // Validate required fields
+        if (!transactionHash || tokenId === undefined || !confirmedAt) {
+          return reply.code(400).send({
+            error: 'Missing required fields',
+            required: ['transactionHash', 'tokenId', 'confirmedAt']
+          });
+        }
+
+        console.log('[NFT API] Confirming transaction:', transactionHash, 'with token ID:', tokenId);
+
+        const updatedNFT = confirmIdentityNFTTransaction(transactionHash, tokenId, confirmedAt);
+
+        if (!updatedNFT) {
+          console.log('[NFT API] NFT not found for confirmation');
+          return reply.code(404).send({
+            error: 'NFT not found',
+            message: 'No identity NFT found with this transaction hash'
+          });
+        }
+
+        console.log('[NFT API] ✅ Transaction confirmed successfully');
+
+        return reply.send({
+          success: true,
+          nft: updatedNFT
+        });
+      } catch (error) {
+        console.error('[NFT API] Error confirming transaction:', error);
+        return reply.code(500).send({
+          error: 'Failed to confirm transaction',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  );
+
+  /**
+   * PATCH /api/nft/fail-transaction
+   * Mark a pending transaction as failed
+   */
+  fastify.patch<{ Body: FailTransactionBody }>(
+    '/api/nft/fail-transaction',
+    async (request: FastifyRequest<{ Body: FailTransactionBody }>, reply: FastifyReply) => {
+      try {
+        const { transactionHash } = request.body;
+
+        // Validate required fields
+        if (!transactionHash) {
+          return reply.code(400).send({
+            error: 'Missing required fields',
+            required: ['transactionHash']
+          });
+        }
+
+        console.log('[NFT API] Marking transaction as failed:', transactionHash);
+
+        const updatedNFT = failIdentityNFTTransaction(transactionHash);
+
+        if (!updatedNFT) {
+          console.log('[NFT API] NFT not found for failure');
+          return reply.code(404).send({
+            error: 'NFT not found',
+            message: 'No identity NFT found with this transaction hash'
+          });
+        }
+
+        console.log('[NFT API] ✅ Transaction marked as failed');
+
+        return reply.send({
+          success: true,
+          nft: updatedNFT
+        });
+      } catch (error) {
+        console.error('[NFT API] Error failing transaction:', error);
+        return reply.code(500).send({
+          error: 'Failed to mark transaction as failed',
           message: error instanceof Error ? error.message : 'Unknown error'
         });
       }

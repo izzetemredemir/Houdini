@@ -65,18 +65,40 @@ export function initializeDatabase() {
   const createIdentityNFTsTable = `
     CREATE TABLE IF NOT EXISTS identity_nfts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      token_id INTEGER NOT NULL UNIQUE,
+      token_id INTEGER UNIQUE,
+      transaction_hash TEXT NOT NULL UNIQUE,
       wallet_address TEXT NOT NULL,
       profile_type INTEGER NOT NULL,
       og0_root_hash TEXT NOT NULL,
       storage_record_id INTEGER,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'failed')),
       created_at DATETIME NOT NULL,
       last_updated_at DATETIME,
+      confirmed_at DATETIME,
       FOREIGN KEY (storage_record_id) REFERENCES storage_records(id)
     )
   `;
 
   db.exec(createIdentityNFTsTable);
+
+  // Migration: Add new columns to existing table if they don't exist
+  try {
+    db.exec(`ALTER TABLE identity_nfts ADD COLUMN transaction_hash TEXT`);
+  } catch (e) {
+    // Column already exists
+  }
+
+  try {
+    db.exec(`ALTER TABLE identity_nfts ADD COLUMN status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'failed'))`);
+  } catch (e) {
+    // Column already exists
+  }
+
+  try {
+    db.exec(`ALTER TABLE identity_nfts ADD COLUMN confirmed_at DATETIME`);
+  } catch (e) {
+    // Column already exists
+  }
 
   // Create index on wallet_address for NFT queries
   db.exec(`
@@ -107,13 +129,16 @@ export interface StorageRecord {
  */
 export interface IdentityNFT {
   id: number;
-  token_id: number;
+  token_id: number | null;
+  transaction_hash: string;
   wallet_address: string;
   profile_type: number;
   og0_root_hash: string;
   storage_record_id: number | null;
+  status: 'pending' | 'confirmed' | 'failed';
   created_at: string;
   last_updated_at: string | null;
+  confirmed_at: string | null;
 }
 
 /**
@@ -212,19 +237,21 @@ export function deleteStorageRecord(id: number): boolean {
 /**
  * Create a new identity NFT record
  */
-export function createIdentityNFT(nft: Omit<IdentityNFT, 'id' | 'last_updated_at'>): IdentityNFT {
+export function createIdentityNFT(nft: Omit<IdentityNFT, 'id' | 'last_updated_at' | 'confirmed_at'>): IdentityNFT {
   const stmt = db.prepare(`
     INSERT INTO identity_nfts
-    (token_id, wallet_address, profile_type, og0_root_hash, storage_record_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    (token_id, transaction_hash, wallet_address, profile_type, og0_root_hash, storage_record_id, status, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const info = stmt.run(
     nft.token_id,
+    nft.transaction_hash,
     nft.wallet_address,
     nft.profile_type,
     nft.og0_root_hash,
     nft.storage_record_id,
+    nft.status,
     nft.created_at
   );
 
@@ -300,6 +327,59 @@ export function getIdentityNFTsCountByWallet(walletAddress: string): number {
   const stmt = db.prepare('SELECT COUNT(*) as count FROM identity_nfts WHERE wallet_address = ?');
   const result = stmt.get(walletAddress) as { count: number };
   return result.count;
+}
+
+/**
+ * Get a single identity NFT by transaction hash
+ */
+export function getIdentityNFTByTxHash(transactionHash: string): IdentityNFT | undefined {
+  const stmt = db.prepare(`
+    SELECT * FROM identity_nfts
+    WHERE transaction_hash = ?
+  `);
+  return stmt.get(transactionHash) as IdentityNFT | undefined;
+}
+
+/**
+ * Confirm a transaction - update status to 'confirmed' and set token_id
+ */
+export function confirmIdentityNFTTransaction(
+  transactionHash: string,
+  tokenId: number,
+  confirmedAt: string
+): IdentityNFT | undefined {
+  const stmt = db.prepare(`
+    UPDATE identity_nfts
+    SET status = 'confirmed', token_id = ?, confirmed_at = ?
+    WHERE transaction_hash = ?
+  `);
+
+  const info = stmt.run(tokenId, confirmedAt, transactionHash);
+
+  if (info.changes > 0) {
+    return getIdentityNFTByTxHash(transactionHash);
+  }
+
+  return undefined;
+}
+
+/**
+ * Fail a transaction - update status to 'failed'
+ */
+export function failIdentityNFTTransaction(transactionHash: string): IdentityNFT | undefined {
+  const stmt = db.prepare(`
+    UPDATE identity_nfts
+    SET status = 'failed'
+    WHERE transaction_hash = ?
+  `);
+
+  const info = stmt.run(transactionHash);
+
+  if (info.changes > 0) {
+    return getIdentityNFTByTxHash(transactionHash);
+  }
+
+  return undefined;
 }
 
 // Initialize the database schema on module load

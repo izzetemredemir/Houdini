@@ -14,6 +14,8 @@ import type {
   GetNFTResponse,
   UpdateNFTRequest,
   UpdateNFTResponse,
+  ConfirmTransactionRequest,
+  FailTransactionRequest,
 } from '../types/identityNFT';
 
 // Backend API Configuration
@@ -100,6 +102,48 @@ async function updateNFT(tokenId: number, request: UpdateNFTRequest): Promise<Id
 }
 
 /**
+ * Confirm a pending transaction
+ */
+async function confirmTransaction(request: ConfirmTransactionRequest): Promise<IdentityNFT> {
+  const response = await fetch(`${BACKEND_API_BASE}/confirm-transaction`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to confirm transaction: ${response.status}`);
+  }
+
+  const data: UpdateNFTResponse = await response.json();
+  return data.nft;
+}
+
+/**
+ * Fail a pending transaction
+ */
+async function failTransaction(request: FailTransactionRequest): Promise<IdentityNFT> {
+  const response = await fetch(`${BACKEND_API_BASE}/fail-transaction`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to mark transaction as failed: ${response.status}`);
+  }
+
+  const data: UpdateNFTResponse = await response.json();
+  return data.nft;
+}
+
+/**
  * Hook to fetch all NFTs for a wallet
  */
 export function useWalletNFTs(address: Address | undefined) {
@@ -161,6 +205,47 @@ export function useUpdateNFT() {
     },
     onError: (error) => {
       console.error('[NFT API] ❌ Failed to update NFT:', error);
+    },
+  });
+}
+
+/**
+ * Hook to confirm a pending transaction
+ */
+export function useConfirmTransaction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: confirmTransaction,
+    onSuccess: (nft) => {
+      // Invalidate wallet NFTs queries to refetch with updated status
+      queryClient.invalidateQueries({ queryKey: ['identity-nfts', nft.wallet_address] });
+      if (nft.token_id) {
+        queryClient.invalidateQueries({ queryKey: ['identity-nft', nft.token_id] });
+      }
+      console.log('[NFT API] ✅ Transaction confirmed successfully:', nft.transaction_hash, '-> Token ID:', nft.token_id);
+    },
+    onError: (error) => {
+      console.error('[NFT API] ❌ Failed to confirm transaction:', error);
+    },
+  });
+}
+
+/**
+ * Hook to fail a pending transaction
+ */
+export function useFailTransaction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: failTransaction,
+    onSuccess: (nft) => {
+      // Invalidate wallet NFTs queries to refetch with updated status
+      queryClient.invalidateQueries({ queryKey: ['identity-nfts', nft.wallet_address] });
+      console.log('[NFT API] ✅ Transaction marked as failed:', nft.transaction_hash);
+    },
+    onError: (error) => {
+      console.error('[NFT API] ❌ Failed to mark transaction as failed:', error);
     },
   });
 }

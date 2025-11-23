@@ -4,7 +4,7 @@ import { copyToClipboard, downloadLLMsTxt } from '../../utils/llmsTxtFormatter';
 import { useProfileRegistry } from '../../hooks/useProfileRegistry';
 import { formatHashForDisplay } from '../../utils/profileHash';
 import { useHoudiniNFT } from '../../hooks/useHoudiniNFT';
-import { useRegisterNFT, useUpdateNFT } from '../../hooks/useIdentityNFTsAPI';
+import { useRegisterNFT, useUpdateNFT, useConfirmTransaction, useFailTransaction } from '../../hooks/useIdentityNFTsAPI';
 import { ProfileTypeNumber } from '../../types/llmsTxt';
 import { useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import type { ProfileType } from '../../types/llmsTxt';
@@ -42,6 +42,8 @@ export function EditorStep({ content, profileType, onContentChange, onNavigateTo
 
   const registerNFT = useRegisterNFT();
   const updateNFT = useUpdateNFT();
+  const confirmTransaction = useConfirmTransaction();
+  const failTransaction = useFailTransaction();
 
   const { isSuccess: isNftSuccess, isLoading: isNftConfirming, data: receiptData } = useWaitForTransactionReceipt({
     hash: nftTxHash,
@@ -133,6 +135,11 @@ export function EditorStep({ content, profileType, onContentChange, onNavigateTo
       return;
     }
 
+    if (!address) {
+      setNftError('Please connect your wallet');
+      return;
+    }
+
     try {
       setNftError(undefined);
       console.log('[EditorStep] Starting NFT operation...');
@@ -145,20 +152,57 @@ export function EditorStep({ content, profileType, onContentChange, onNavigateTo
       const existingNFT = findNFTByType(profileTypeNum);
 
       let txHash: `0x${string}`;
+      const isUpdate = !!existingNFT;
 
       if (existingNFT) {
         // Update existing NFT
         console.log('[EditorStep] Updating existing NFT #', existingNFT.tokenId.toString());
         txHash = await updateIdentity(existingNFT.tokenId, result.og0RootHash);
-        console.log('[EditorStep] ✅ NFT updated! TX:', txHash);
+        console.log('[EditorStep] ✅ NFT update TX sent:', txHash);
       } else {
         // Mint new NFT
         console.log('[EditorStep] Minting new NFT');
         txHash = await mintIdentity(result.og0RootHash, profileTypeNum);
-        console.log('[EditorStep] ✅ NFT minted! TX:', txHash);
+        console.log('[EditorStep] ✅ NFT mint TX sent:', txHash);
       }
 
       setNftTxHash(txHash);
+
+      // 🚀 IMMEDIATE DATABASE SAVE - Save to DB as soon as TX is sent
+      console.log('[EditorStep] 💾 Immediately saving to database with pending status...');
+
+      try {
+        if (isUpdate) {
+          // For updates, register with existing tokenId
+          await registerNFT.mutateAsync({
+            tokenId: Number(existingNFT.tokenId),
+            transactionHash: txHash,
+            walletAddress: address,
+            profileType: profileTypeNum,
+            og0RootHash: result.og0RootHash,
+            storageRecordId: result.storageRecordId,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          });
+          console.log('[EditorStep] ✅ Update NFT saved to DB with pending status');
+        } else {
+          // For new mints, save without tokenId
+          await registerNFT.mutateAsync({
+            transactionHash: txHash,
+            walletAddress: address,
+            profileType: profileTypeNum,
+            og0RootHash: result.og0RootHash,
+            storageRecordId: result.storageRecordId,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          });
+          console.log('[EditorStep] ✅ New NFT saved to DB with pending status');
+        }
+      } catch (dbError) {
+        console.error('[EditorStep] ⚠️ Failed to save to database immediately:', dbError);
+        // Don't fail the whole operation if DB save fails
+      }
+
     } catch (err: any) {
       console.error('[EditorStep] ❌ NFT operation failed:', err);
       setNftError(err.message || 'NFT operation failed');
@@ -202,78 +246,69 @@ export function EditorStep({ content, profileType, onContentChange, onNavigateTo
     }
   }, [error]);
 
-  // Register NFT in backend database after successful mint/update
+  // Monitor transaction and update status in database
   // This effect triggers when receipt data becomes available
   React.useEffect(() => {
-    // Only proceed if we have a confirmed transaction with receipt data
+    // Only proceed if we have receipt data and tx hash
     if (!receiptData || !nftTxHash) {
       return;
     }
 
-    // Debug: Log all condition states
-    console.log('[EditorStep] 🔍 Receipt received! Attempting database save...');
-    console.log('[EditorStep] Conditions check:');
-    console.log('  - isNftSuccess:', isNftSuccess);
-    console.log('  - nftTxHash:', nftTxHash);
-    console.log('  - result (0G upload):', result ? '✅ present' : '❌ missing');
-    console.log('  - address:', address ? '✅ present' : '❌ missing');
-    console.log('  - receiptData:', '✅ present');
+    console.log('[EditorStep] 🔍 Receipt received! Updating transaction status in database...');
+    console.log('[EditorStep] Receipt status:', receiptData.status);
+    console.log('[EditorStep] Transaction hash:', nftTxHash);
 
-    // Check if all required data is available
-    if (!result || !address) {
-      console.error('[EditorStep] ⚠️  Missing required data for database save');
-      if (!result) console.error('[EditorStep] Missing: 0G Storage upload result');
-      if (!address) console.error('[EditorStep] Missing: wallet address');
-      return;
-    }
-
-    const saveNFTToBackend = async () => {
+    const updateTransactionStatus = async () => {
       try {
-        console.log('[EditorStep] ✅ All conditions met! NFT transaction confirmed, saving to backend...');
-        console.log('[EditorStep] Receipt status:', receiptData.status);
+        // Check if transaction was successful
+        if (receiptData.status === 'success') {
+          console.log('[EditorStep] ✅ Transaction successful! Confirming in database...');
 
-        const profileTypeNum = ProfileTypeNumber[profileType];
-        const existingNFT = findNFTByType(profileTypeNum);
-
-        if (existingNFT) {
-          // Update existing NFT
-          console.log('[EditorStep] Updating NFT in backend:', existingNFT.tokenId.toString());
-          await updateNFT.mutateAsync({
-            tokenId: Number(existingNFT.tokenId),
-            request: {
-              og0RootHash: result.og0RootHash,
-              lastUpdatedAt: new Date().toISOString(),
-            },
-          });
-          console.log('[EditorStep] ✅ NFT updated in backend');
-        } else {
-          // Register new NFT - extract tokenId from transaction receipt
-          console.log('[EditorStep] Registering new NFT in backend...');
-          console.log('[EditorStep] Receipt logs count:', receiptData.logs?.length || 0);
-
+          // Extract tokenId from receipt for new mints
           const tokenId = extractTokenIdFromReceipt(receiptData);
 
           if (tokenId !== null) {
             console.log('[EditorStep] ✅ TokenId extracted:', tokenId);
-            console.log('[EditorStep] Calling backend API to register NFT...');
 
-            await registerNFT.mutateAsync({
+            // Confirm transaction in database with tokenId
+            await confirmTransaction.mutateAsync({
+              transactionHash: nftTxHash,
               tokenId: tokenId,
-              walletAddress: address,
-              profileType: profileTypeNum,
-              og0RootHash: result.og0RootHash,
-              storageRecordId: result.storageRecordId,
-              createdAt: new Date().toISOString(),
+              confirmedAt: new Date().toISOString(),
             });
 
-            console.log('[EditorStep] ✅ NFT registered in backend database!');
+            console.log('[EditorStep] ✅ Transaction confirmed in database with token ID:', tokenId);
           } else {
-            console.error('[EditorStep] ❌ Could not extract tokenId from transaction receipt');
-            console.error('[EditorStep] Receipt data:', JSON.stringify(receiptData, null, 2));
+            console.error('[EditorStep] ⚠️ Could not extract tokenId from receipt');
+            console.log('[EditorStep] This might be an update transaction (tokenId already exists)');
+
+            // For updates, we still need to confirm but tokenId might already be in the DB
+            // We'll try to confirm anyway - the backend will handle it
+            try {
+              // Use a placeholder tokenId of 0 for updates - backend will keep existing tokenId
+              await confirmTransaction.mutateAsync({
+                transactionHash: nftTxHash,
+                tokenId: 0, // Placeholder
+                confirmedAt: new Date().toISOString(),
+              });
+              console.log('[EditorStep] ✅ Update transaction confirmed in database');
+            } catch (confirmErr) {
+              console.error('[EditorStep] Failed to confirm update transaction:', confirmErr);
+            }
           }
+        } else if (receiptData.status === 'reverted') {
+          console.log('[EditorStep] ❌ Transaction failed/reverted! Marking as failed in database...');
+
+          // Mark transaction as failed
+          await failTransaction.mutateAsync({
+            transactionHash: nftTxHash,
+          });
+
+          console.log('[EditorStep] ✅ Transaction marked as failed in database');
+          setNftError('Transaction failed. Please try again.');
         }
       } catch (err) {
-        console.error('[EditorStep] ❌ Failed to save NFT to backend:', err);
+        console.error('[EditorStep] ❌ Failed to update transaction status in backend:', err);
         if (err instanceof Error) {
           console.error('[EditorStep] Error message:', err.message);
           console.error('[EditorStep] Error stack:', err.stack);
@@ -282,8 +317,8 @@ export function EditorStep({ content, profileType, onContentChange, onNavigateTo
       }
     };
 
-    saveNFTToBackend();
-  }, [receiptData, nftTxHash]); // Only trigger when receipt data or tx hash changes
+    updateTransactionStatus();
+  }, [receiptData, nftTxHash]); // Trigger when receipt data or tx hash changes
 
   return (
     <div className="editor-step">

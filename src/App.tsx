@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
-import CountUp from 'react-countup'
 import { MultiStepOnboarding } from './components/MultiStepOnboarding'
 import { Portfolio } from './pages/Portfolio'
 import { StorageRecords } from './pages/StorageRecords'
 import { MyIdentities } from './pages/MyIdentities'
 import { LLMsTxtModal } from './components/LLMsTxtGenerator/LLMsTxtModal'
 import { getUserProfile, getDisplayInfo } from './utils/userProfile'
-import { MOCK_GLOBAL_STATS, getDemoMode, toggleDemoMode } from './mocks/demoData'
+import { getDemoMode, toggleDemoMode } from './mocks/demoData'
 import './App.css'
 
 type Page = 'home' | 'portfolio' | 'storage' | 'identities'
@@ -195,38 +194,6 @@ Stored on 0G with Merkle-proof verification ✓`}
                 <div className="step-number">3</div>
                 <h3>Upload to 0G</h3>
                 <p>Store your profile on decentralized storage</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Stats Section */}
-          <section className="stats-section">
-            <div className="stats-grid">
-              <div className="stat-card animate-scaleIn" style={{ animationDelay: '1s' }}>
-                <div className="stat-number">
-                  <CountUp end={MOCK_GLOBAL_STATS.totalProfiles} duration={2.5} separator="," />
-                </div>
-                <div className="stat-label">Profiles Created</div>
-              </div>
-              <div className="stat-card animate-scaleIn" style={{ animationDelay: '1.1s' }}>
-                <div className="stat-number">
-                  <CountUp end={MOCK_GLOBAL_STATS.totalStorageSize} duration={2.5} />
-                  <span className="stat-unit">TB</span>
-                </div>
-                <div className="stat-label">On 0G Storage</div>
-              </div>
-              <div className="stat-card animate-scaleIn" style={{ animationDelay: '1.2s' }}>
-                <div className="stat-number">
-                  <CountUp end={MOCK_GLOBAL_STATS.totalChains} duration={2.5} />
-                  <span className="stat-unit">+</span>
-                </div>
-                <div className="stat-label">Supported Chains</div>
-              </div>
-              <div className="stat-card animate-scaleIn" style={{ animationDelay: '1.3s' }}>
-                <div className="stat-number">
-                  <CountUp end={MOCK_GLOBAL_STATS.aiAgentsConnected} duration={2.5} />
-                </div>
-                <div className="stat-label">AI Agents Connected</div>
               </div>
             </div>
           </section>

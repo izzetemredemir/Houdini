@@ -23,7 +23,13 @@ Decentralized storage network providing:
 - Content-addressed storage with root hash
 - Permanent, retrievable profile data
 - Transaction confirmation on 0G blockchain
-- **Deployed Contract**: `0x116938bFd313667f9beFCB762CeD66445b62dC65` (0G Testnet)
+- **Deployed Contract**: [`0x116938bFd313667f9beFCB762CeD66445b62dC65`](https://chainscan-galileo.0g.ai/address/0x116938bfd313667f9befcb762ced66445b62dc65) (0G Testnet)
+
+**Example Storage Transactions:**
+- [0x080571...65ad7](https://chainscan-galileo.0g.ai/tx/0x080571e73b1ce4ecf30316bc79b9c24371f0d818ca48ab40a096ea0815165ad7)
+- [0x4f7fa0...aad30a](https://chainscan-galileo.0g.ai/tx/0x4f7fa0cb3835f225078ba341fe8a2ed07c56a38cb7345a374b32f2ee19aad30a)
+- [0xf78c05...2985f4](https://chainscan-galileo.0g.ai/tx/0xf78c0558f2c8f01a7c6e901503c2c30adc0dcb5767226c946ff0e8f9892985f4)
+- [0x207d3e...a18211b](https://chainscan-galileo.0g.ai/tx/0x207d3e7dd5765ec7921521659cc9f8d7e1c3b067fa2267c46741d91bda18211b)
 
 ### 📊 Octav API
 Portfolio aggregation service that provides:
@@ -108,7 +114,7 @@ npm run dev:all
 ## Smart Contract
 
 **HoudiniIdentityNFT** (0G Testnet)
-Address: `0x116938bFd313667f9beFCB762CeD66445b62dC65`
+**Contract**: [`0x116938bFd313667f9beFCB762CeD66445b62dC65`](https://chainscan-galileo.0g.ai/address/0x116938bfd313667f9befcb762ced66445b62dc65)
 
 Features:
 - Soulbound (non-transferable)

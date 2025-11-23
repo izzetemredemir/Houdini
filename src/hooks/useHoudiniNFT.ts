@@ -55,7 +55,7 @@ export function useHoudiniNFT() {
       abi: HOUDINI_NFT_ABI,
       functionName: "mintIdentity",
       args: [og0RootHash, profileType],
-      gas: 500000n, // 500k gas limit for NFT minting
+      gas: 1000000n, // 1M gas limit for NFT minting
     });
 
     console.log("[useHoudiniNFT] ✅ Mint transaction sent:", hash);
@@ -93,7 +93,7 @@ export function useHoudiniNFT() {
       abi: HOUDINI_NFT_ABI,
       functionName: "updateIdentity",
       args: [tokenId, newOg0RootHash],
-      gas: 300000n, // 300k gas limit for NFT updates
+      gas: 600000n, // 600k gas limit for NFT updates
     });
 
     console.log("[useHoudiniNFT] ✅ Update transaction sent:", hash);

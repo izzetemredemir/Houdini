@@ -9,24 +9,29 @@
  */
 export interface IdentityNFT {
   id: number;
-  token_id: number;
+  token_id: number | null;
+  transaction_hash: string;
   wallet_address: string;
   profile_type: number;
   og0_root_hash: string;
   storage_record_id: number | null;
+  status: 'pending' | 'confirmed' | 'failed';
   created_at: string;
   last_updated_at: string | null;
+  confirmed_at: string | null;
 }
 
 /**
  * Request body for registering a new NFT
  */
 export interface RegisterNFTRequest {
-  tokenId: number;
+  tokenId?: number | null;
+  transactionHash: string;
   walletAddress: string;
   profileType: number;
   og0RootHash: string;
   storageRecordId?: number;
+  status?: 'pending' | 'confirmed' | 'failed';
   createdAt: string;
 }
 
@@ -36,6 +41,22 @@ export interface RegisterNFTRequest {
 export interface UpdateNFTRequest {
   og0RootHash: string;
   lastUpdatedAt: string;
+}
+
+/**
+ * Request body for confirming a transaction
+ */
+export interface ConfirmTransactionRequest {
+  transactionHash: string;
+  tokenId: number;
+  confirmedAt: string;
+}
+
+/**
+ * Request body for failing a transaction
+ */
+export interface FailTransactionRequest {
+  transactionHash: string;
 }
 
 /**
