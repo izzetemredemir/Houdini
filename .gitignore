@@ -82,3 +82,49 @@ backend/*.db
 # ========================================
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+
+# ========================================
+# Testing & Coverage
+# ========================================
+*.test.log
+.nyc_output/
+test-results/
+playwright-report/
+
+# ========================================
+# Build & Temp Files
+# ========================================
+*.tsbuildinfo
+.temp/
+.tmp/
+*.tmp
+.parcel-cache/
+
+# ========================================
+# Editor & IDE
+# ========================================
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.project
+.classpath
+.settings/
+
+# ========================================
+# Package Manager
+# ========================================
+.pnpm-store/
+.yarn/
+.pnp.*
+yarn.lock
+pnpm-lock.yaml
+
+# ========================================
+# Misc
+# ========================================
+.eslintcache
+.prettierignore
