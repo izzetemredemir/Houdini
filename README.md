@@ -4,10 +4,11 @@
 
 ## What is Houdini?
 
-Houdini serves as the definitive LLMS.txt storage for wallets, designed to give on-chain AI agents easy access to structured identity and portfolio data. Instead of forcing AI models to guess context from raw transaction hashes, we utilize **Octav.fi** to retrieve accurate portfolio information and combine it with user-verified inputs. This data is formatted into an llms.txt file—the standard for AI readability—and securely stored on **0G**. By creating an Identity NFT that links to this file, Houdini ensures that any AI-powered dApp or DAO can instantly access prepared, reliable knowledge about a user's on-chain history.
+Houdini serves as the definitive LLMS.txt storage for wallets, designed to give on-chain AI agents easy access to structured identity and portfolio data. Instead of forcing AI models to guess context from raw transaction hashes, we utilize **Octav.fi** to retrieve accurate portfolio information and combine it with user-verified inputs. This data is formatted into an llms.txt file—the standard for AI readability—and securely stored on **0G**. By creating an Identity NFT that links to this file, Houdini ensures that any AI-powered dApp or DAO can instantly access prepared, reliable knowledge about a user's on-chain history.![storage](https://github.com/user-attachments/assets/a153b7d8-3611-4442-b0c6-42a95971ef65)
+
 
 <img width="1600" height="920" alt="image" src="https://github.com/user-attachments/assets/48994f32-9a7a-4956-8b40-6ec29499eb5e" />
-<img width="1600" height="910" alt="image" src="https://github.com/user-attachments/assets/888cabb8-c552-4eee-9f0c-d48dc400d216" />
+
 
 ## Key Features
 
