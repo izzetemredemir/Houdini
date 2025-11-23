@@ -1,0 +1,299 @@
+.portfolio-display {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* No Portfolio State */
+.portfolio-display.no-portfolio {
+  text-align: center;
+}
+
+.no-portfolio-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.portfolio-display.no-portfolio h2 {
+  font-size: 1.75rem;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.no-portfolio-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.portfolio-address {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  font-family: monospace;
+  margin: 0;
+}
+
+/* Total Value Section */
+.portfolio-total {
+  text-align: center;
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--border-primary);
+  margin-bottom: 2rem;
+}
+
+.total-label {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.total-value {
+  font-size: 3rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.portfolio-stats {
+  color: var(--text-secondary);
+  font-size: 0.938rem;
+  margin: 0;
+}
+
+/* Sections */
+.portfolio-section {
+  margin-bottom: 2rem;
+}
+
+.portfolio-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+}
+
+/* Chain Distribution */
+.chain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chain-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 0.875rem;
+}
+
+.chain-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.chain-name {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.chain-value {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.chain-bar-container {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.chain-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.chain-percentage {
+  font-size: 0.813rem;
+  color: var(--text-tertiary);
+}
+
+/* Token List */
+.token-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.token-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.token-icon-container {
+  flex-shrink: 0;
+}
+
+.token-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.token-icon-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: white;
+}
+
+.token-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.token-symbol {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.token-chain {
+  font-size: 0.813rem;
+  color: var(--text-tertiary);
+  text-transform: capitalize;
+}
+
+.token-balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.token-amount {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.token-value {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+/* DeFi Positions */
+.defi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.defi-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.defi-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.defi-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.defi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.defi-protocol {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.defi-type {
+  font-size: 0.813rem;
+  color: var(--text-tertiary);
+  text-transform: capitalize;
+}
+
+.defi-value {
+  font-size: 0.938rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+@media (max-width: 480px) {
+  .portfolio-display {
+    padding: 1.5rem;
+  }
+
+  .total-value {
+    font-size: 2.25rem;
+  }
+
+  .portfolio-total {
+    padding: 1.5rem;
+  }
+
+  .token-icon,
+  .token-icon-placeholder {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+}
