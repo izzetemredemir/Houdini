@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Build outputs
+dist
+build
+.next
+out
+*.tsbuildinfo
+
+# Cache directories
+.cache
+.parcel-cache
+.vite
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Generated files
+coverage
+*.log
+*.log.*
+
+# Artifacts
+artifacts
+cache
+typechain-types
+
+# Git
+.git
+.github
+
+# Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
